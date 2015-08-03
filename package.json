@@ -1,0 +1,25 @@
+{
+  "name": "node-multi-webhook",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "express": "^4.13.2",
+    "express-mock-request": "^0.0.2",
+    "request": "^2.60.0",
+    "stdio": "^0.2.7",
+    "supertest": "^1.0.1"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "supertest": "^1.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
