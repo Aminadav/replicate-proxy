@@ -14,6 +14,7 @@ options=stdio.getopt({
  * 1. Split the webhook to many server if it is needed.
  * 2. We save the request, and let us to repeat it.
  * 3. We save all the request, and when we need to repeat we can specifiy the server
+ * 4. If there is master, we reply with master response! 
  */
 
 if(options.repeat){
@@ -52,7 +53,7 @@ if(options.repeat){
 		request({
 			url:row.url,
 			headers:headers,
-			body:row.data,
+			body:row.body,
 			method:row.method
 		},function(err,obj,body){
 			if(err) console.log('error',err)
@@ -112,24 +113,36 @@ function webhooksplit(){
 				log.url=req.protocol + '://' + req.headers['host']  + req.url;
 				log.headers=req.headers;
 				log.ip=req.ip
-				log.data=data
+				log.body=data
 				log.method=req.method
 				if(settings.log){
 					require('fs').appendFileSync(process.cwd() + '/' + settings.log,JSON.stringify(log) + '\r\n')
 				}
 
-				res.end('forwarding')
+				var thereIsMaster=false
+				console.log('h')
 				for (var i=0;i<settings.webhooks.length;i++){			
-					forward(req.url,req.method,JSON.parse(JSON.stringify(req.headers)),settings.webhooks[i],data)
+					if(settings.webhooks[i].master && !thereIsMaster) thereIsMaster=true
+					forward(req.url,req.method,JSON.parse(JSON.stringify(req.headers)),settings.webhooks[i],data,function(err,obj,body){
+						if(err){
+							res.end('Error Proxying:' + err.message)
+							return
+						}
+						res.writeHead(obj.statusCode,obj.headers)
+						res.end(body);
+					})
 				}
+				console.log('i')
+				if(!thereIsMaster)
+				res.end('forwarding')
 			}
 		})
 		server=http.createServer(app).listen(settings.port || 80,settings.ip)
 	}
 
-	function forward(reqUrl,reqMethod,reqHeaders,webhook,data){
+	function forward(reqUrl,reqMethod,reqHeaders,webhook,data,callback){
 		var u=require('url').parse(reqUrl)
-		var forwardTo=webhook.url    + u.pathname + (u.search || '');
+		var forwardTo=webhook.url    + (u.pathname!=='/' ? u.pathname :'') + (u.search || '');
 		var headers=reqHeaders;
 		delete headers.host
 		console.log('Forwarding to:', forwardTo);
@@ -146,6 +159,9 @@ function webhooksplit(){
 				requestJson.response=body
 				requestJson.statusCode=obj && obj.statusCode
 				require('fs').appendFileSync(process.cwd() + '/' + webhook.log,JSON.stringify(requestJson) + '\r\n')
+			}
+			if(callback && webhook.master){
+				callback.apply(null,arguments)
 			}
 		}
 		)

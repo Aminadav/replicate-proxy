@@ -8,6 +8,11 @@
 			"log":"mylog2.json"
 		},
 		{
+			"url":"http://httpbin.org/post",
+			"log":"mylog4.json",
+			"master":true
+		},
+		{
 			"url":"https://ek0fcy1x0jjm.runscope.net/abc?d",
 			"log":"mylog2.json"
 		}
