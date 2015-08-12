@@ -138,6 +138,7 @@ function webhooksplit(){
 			}
 		})
 		server=http.createServer(app).listen(settings.port || 80,settings.ip)
+console.log ('Listen:'  + settings.ip + ':' +(settings.port || 80) )
 	}
 
 	function forward(reqUrl,reqMethod,reqHeaders,webhook,data,callback){
