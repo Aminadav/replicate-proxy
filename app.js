@@ -2,12 +2,16 @@ var express=require('express');
 var fs=require('fs');
 var request=require('request');
 var stdio=require('stdio');
-
+var keypress=require('keypress');
+keypress(process.stdin)
+var moment=require('moment')
+var colors=require('colors')
 
 options=stdio.getopt({
 	repeat:{key:'r',args:2,description:'when repeating requesting you should specificy log file, and or timestamp'},
 	'config':{key:'c',args:1,description:'Default is settings.json'},
 	'watch':{key:'w',description:'Watching and reloading everytimg the config file changed'},
+	'view':{key:'v',args:1,description:'View log file to repeat...'},
 })
 
 /* We are doing two things, outside the main software:
@@ -17,7 +21,59 @@ options=stdio.getopt({
  * 4. If there is master, we reply with master response! 
  */
 
-if(options.repeat){
+if (options.view){
+	var file=fs.readFileSync(options.view,'utf-8')
+	// listen for the "keypress" event 
+	var i=0
+	file=file.split('\r').reverse()
+	var k=[]
+	var n;
+	showNext()
+	process.stdin.on('keypress', function (ch, key) {
+		if(ch.match(/[1-9]/)){
+			n=parseInt(ch);
+			console.log(n)
+			console.log(k[n])			
+			console.log('---')
+			console.log('R: Repeat. B: back to list')			
+		}
+		else if(key && key.name=='b'){
+			i-=10;
+			showNext()
+		}
+		else if(key && key.name=='r'){
+			console.log('tryRepat')
+			repeat(k[n])
+			console.log('after')
+		}
+	  else if (key&&key.name=='c') {
+	  	process.exit()
+	  }
+	  else{
+	  	showNext()
+	  }
+	});	 
+	process.stdin.setRawMode(true);
+	process.stdin.resume();
+	function showNext(){
+		k=[]
+		for(var j=0;j<file.length && j<=9;j++,i++){
+			try{
+				x=JSON.parse(file[i])
+				k[j]=x
+				var d=new Date(x.timestamp);
+				d=moment(d).format('DD/MM HH:MM')
+				console.log(' ' + colors.red.bold(j) + '  -  ' + colors.gray('(' + (file.length-i) + ') ' + d),x.method + ' ' + colors.bold(x.url))
+			}
+			catch(asdd){
+
+			}
+		}
+			console.log('---')
+			console.log('Space - Continue. 1-9: More details.')
+	}
+}
+else if(options.repeat){
 	try{
 		var file=fs.readFileSync(options.repeat[0],'utf-8')
 	}
@@ -45,21 +101,24 @@ if(options.repeat){
 			}				
 		}
 	}
-	if(row){
-		console.log('Repeating:')
-		console.log(require('util').inspect(row))
-		var headers=row.headers
-		headers.isRepeat=true
-		request({
-			url:row.url,
-			headers:headers,
-			body:row.body,
-			method:row.method
-		},function(err,obj,body){
-			if(err) console.log('error',err)
-			console.log(obj && obj.statusCode)
-			console.log(body)
-		})
+	repeat(row);
+	function repeat(row){
+		if(row){
+			console.log(colors.red.bold('Repeating:...'))
+			console.log(require('util').inspect(row))
+			var headers=row.headers
+			headers.isRepeat=true
+			request({
+				url:row.url,
+				headers:headers,
+				body:row.body,
+				method:row.method
+			},function(err,obj,body){
+				if(err) console.log('error',err)
+				console.log(obj && obj.statusCode)
+				console.log(body)
+			})
+		}
 	}		
 }
 else{
