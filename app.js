@@ -35,7 +35,7 @@ if (options.view){
 			console.log(n)
 			console.log(k[n])			
 			console.log('---')
-			console.log('R: Repeat. B: back to list')			
+			console.log(colors.bold('R: Repeat. B: back to list. Command: ' + colors.green('node app.js --repeat ' + options.view +' ' + (file.length-n)) ))
 		}
 		else if(key && key.name=='b'){
 			i-=10;
@@ -46,7 +46,7 @@ if (options.view){
 			repeat(k[n])
 			console.log('after')
 		}
-	  else if (key&&key.name=='c') {
+	  else if (key&&key.name=='c' ||key&&key.name=='q') {
 	  	process.exit()
 	  }
 	  else{
@@ -70,7 +70,7 @@ if (options.view){
 			}
 		}
 			console.log('---')
-			console.log('Space - Continue. 1-9: More details.')
+			console.log(colors.bold('Space - Continue. 1-9: More details.'))
 	}
 }
 else if(options.repeat){
